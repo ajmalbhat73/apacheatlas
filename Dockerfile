@@ -1,6 +1,4 @@
-FROM scratch
 FROM ubuntu:18.04
-LABEL maintainer="vadim@clusterside.com"
 ARG VERSION=2.1.0
 
 RUN apt-get update \
