@@ -1,0 +1,42 @@
+FROM ubuntu:latest
+# pre-requisites of Apache Atlas
+# install Java 8 and set the environment variables.
+ARG buildtime_variable=noninteractive
+ENV DEBIAN_FRONTEND=$buildtime_variable 
+RUN apt-get update -y && \
+    apt-get install wget git -y && \
+    apt-get install default-jre -y && \
+    apt-get install openjdk-8-jdk -y && \
+    export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 
+WORKDIR /usr/local/
+COPY apache-maven.sh /etc/profile.d/
+RUN ls -l && \
+    pwd
+# Apache Atlas requires maven, so we will install and configure Maven in image
+RUN wget https://downloads.apache.org/maven/maven-3/3.8.1/binaries/apache-maven-3.8.1-bin.tar.gz && \
+    pwd && \
+    ls -l && \
+    tar -vxzf apache-maven-3.8.1-bin.tar.gz && \
+    chmod +x /etc/profile.d/apache-maven.sh && \
+    ls -l /etc/profile.d/ && \
+    ln -s apache-maven-3.8.1 apache-maven && \
+    . /etc/profile.d/apache-maven.sh
+    
+ARG maven_opts="-Xms2g -Xmx2g"
+ENV MAVEN_OPTS=$maven_opts
+# Since we are done with pre-requisites of Apache Atlas. Lets proceed with installation of Apache Atlas
+RUN git clone https://git-wip-us.apache.org/repos/asf/atlas.git atlas && \
+    cd atlas && \
+    git checkout branch-2.0 && \
+#    export MAVEN_OPTS=”-Xms2g -Xmx2g” && \
+    mvn clean -DskipTests install 
+
+# Package the Apache Atlas that includes Apache HBase and Apache Solr, build with the embedded-hbase-solr profile.
+
+RUN mvn clean -DskipTests package -Pdist,embedded-hbase-solr
+
+EXPOSE 21000
+CMD ["/usr/local/atlas/distro/target/apache-atlas-x.x.0-SNAPSHOT-server/apache-atlas-x.x.0-SNAPSHOT/bin/atlas_start.py"]
+ENTRYPOINT ["python"]
+
+
