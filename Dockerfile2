@@ -28,12 +28,10 @@ ENV MAVEN_OPTS=$maven_opts
 RUN git clone https://git-wip-us.apache.org/repos/asf/atlas.git atlas && \
     cd atlas && \
     git checkout branch-2.0 && \
-#    export MAVEN_OPTS=”-Xms2g -Xmx2g” && \
+    export MAVEN_OPTS=”-Xms2g -Xmx2g” && \
     mvn clean -DskipTests install 
 
-# Package the Apache Atlas that includes Apache HBase and Apache Solr, build with the embedded-hbase-solr profile.
-
-RUN mvn clean -DskipTests package -Pdist,embedded-hbase-solr
+RUN mvn clean -DskipTests package -Pdist
 
 EXPOSE 21000
 CMD ["/usr/local/atlas/distro/target/apache-atlas-x.x.0-SNAPSHOT-server/apache-atlas-x.x.0-SNAPSHOT/bin/atlas_start.py"]
